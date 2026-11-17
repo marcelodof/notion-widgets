@@ -231,7 +231,7 @@
     const date = fmtDate(current.date);
     el.status.textContent = state.failed
       ? `Couldn’t refresh · showing reference rate of ${date}`
-      : `Reference rate · ${date} · not live`;
+      : `Reference rate · ${date}`;
     el.status.title = 'Daily reference rate from frankfurter.dev — not a real-time market rate.';
   }
 
