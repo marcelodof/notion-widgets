@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>EUR / BRL</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="card" id="card" aria-busy="true">
+    <header class="head">
+      <h1 class="pair" id="pair" aria-label="Euro to Brazilian real"></h1>
+      <div class="actions">
+        <button type="button" class="icon-btn" id="swap" aria-label="Reverse conversion direction" title="Reverse direction">
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 5.5h10m0 0L10 3m2.5 2.5L10 8M13.5 10.5h-10m0 0L6 8m-2.5 2.5L6 13"/></svg>
+        </button>
+        <button type="button" class="icon-btn" id="refresh" aria-label="Refresh rate" title="Refresh">
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M13 8a5 5 0 1 1-1.6-3.7M13 2.5v2.3h-2.3"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <div class="body">
+      <section class="quote" aria-label="Current rate and converter">
+        <p class="rate">
+          <span class="rate-base" id="rate-base"></span>
+          <span class="rate-value" id="rate-value">—</span>
+        </p>
+        <p class="meta">
+          <span class="change" id="change"></span>
+          <span id="change-ref"></span>
+        </p>
+
+        <form class="converter" id="converter" autocomplete="off">
+          <label class="field">
+            <span class="visually-hidden" id="amount-label">Amount</span>
+            <span class="prefix" id="amount-prefix" aria-hidden="true"></span>
+            <input id="amount" type="text" inputmode="decimal" value="1" spellcheck="false" aria-labelledby="amount-label">
+          </label>
+          <span class="equals" aria-hidden="true">=</span>
+          <output class="result" id="result" for="amount">—</output>
+        </form>
+      </section>
+
+      <section class="history" aria-label="Historical rate">
+        <div class="history-head">
+          <span class="readout" id="readout"></span>
+          <div class="periods" id="periods" role="group" aria-label="Chart period"></div>
+        </div>
+        <div class="chart" id="chart">
+          <svg id="chart-svg" role="img" tabindex="0" aria-label="Exchange rate history">
+            <path class="chart-area" id="chart-area"/>
+            <path class="chart-line" id="chart-line"/>
+            <line class="chart-cursor" id="chart-cursor" hidden/>
+            <circle class="chart-last" id="chart-last" r="3"/>
+            <circle class="chart-hover" id="chart-hover" r="3.5" hidden/>
+          </svg>
+          <p class="chart-empty" id="chart-empty" hidden></p>
+        </div>
+      </section>
+    </div>
+
+    <footer class="foot" id="status" role="status" aria-live="polite">Loading rates…</footer>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
