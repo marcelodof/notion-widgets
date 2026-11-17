@@ -1,66 +1,52 @@
 # notion-widgets
 
-Small static widgets for embedding in Notion.
+A collection of small static widgets for embedding in Notion.
 
-## EUR / BRL exchange rate (`eur-brl/`)
+Each widget lives in its own folder and is plain HTML, CSS and JavaScript — no build step, no dependencies, no backend. The whole repository is served by GitHub Pages, so every folder is its own embeddable URL.
 
-A compact card showing the latest EUR ↔ BRL reference rate, the change since the previous trading day, a converter, and a 7D / 30D / 90D / 1Y sparkline.
+## Widgets
 
-Plain HTML, CSS and JavaScript — no build step, no dependencies, no API key. Data comes from the free [Frankfurter API](https://frankfurter.dev/).
+| Widget | Folder | Description |
+| --- | --- | --- |
+| EUR / BRL exchange rate | [`eur-brl/`](eur-brl/) | Latest reference rate, daily change, converter and historical sparkline. |
 
-> Rates are **daily reference rates**, published once per working day. They are not real-time market rates, and there are no observations on weekends or holidays.
+Each widget's own README covers its options and customization.
 
-### Run locally
+## Run locally
 
 ```sh
 python3 -m http.server 8000
 ```
 
-Then open <http://localhost:8000/eur-brl/>. Opening `eur-brl/index.html` directly in a browser also works.
+Then open `http://localhost:8000/<widget-folder>/`, e.g. <http://localhost:8000/eur-brl/>.
 
-### Deploy to GitHub Pages
+## Deploy to GitHub Pages
+
+One-time setup:
 
 1. Push this repository to GitHub.
 2. In the repository, go to **Settings → Pages**.
 3. Under **Build and deployment**, set **Source** to *Deploy from a branch*, pick `main` and `/ (root)`, and save.
-4. After a minute the widget is live at `https://<username>.github.io/<repo>/eur-brl/`.
 
-The repository must be public for Pages on a free GitHub plan. The empty `.nojekyll` file tells Pages to serve the files as they are.
+From then on, every push to `main` redeploys all widgets. Each one is available at:
 
-### Embed in Notion
+```
+https://<username>.github.io/<repo>/<widget-folder>/
+```
+
+The repository must be public for Pages on a free GitHub plan. The empty `.nojekyll` file tells Pages to serve the files as they are, without Jekyll processing.
+
+## Embed in Notion
 
 1. In a Notion page, type `/embed` and press Enter.
 2. Paste the widget URL and click **Embed link**.
-3. Drag the edges of the block to resize it. Around 190px tall works for a full-width block; around 330px for a narrow column, where the layout stacks.
+3. Drag the edges of the block to resize it.
 
-### Customize
+## Add a new widget
 
-**Per embed, with URL parameters** — no code changes needed:
+1. Create a folder at the repository root with an `index.html` in it.
+2. Reference its assets with relative paths (`styles.css`, not `/styles.css`) — an absolute path points outside the repository on GitHub Pages.
+3. Add a row to the [Widgets](#widgets) table and a README in the folder.
+4. Push to `main`. The widget is live at its folder URL about a minute later.
 
-| Parameter | Values | Default |
-| --- | --- | --- |
-| `from` | `EUR`, `BRL` | `EUR` |
-| `period` | `7`, `30`, `90`, `365` | `30` |
-| `theme` | `light` | dark (`#191919`, Notion's dark background) |
-
-Example: `…/eur-brl/?from=BRL&period=90`
-
-The widget is always dark, to match Notion's dark theme, regardless of the system setting. Add `?theme=light` for a white version.
-
-**Defaults, in `eur-brl/app.js`** — the `CONFIG` object at the top:
-
-- `defaultFrom` — starting direction (`'EUR'` or `'BRL'`)
-- `defaultPeriod` — starting chart period in days
-- `refreshMinutes` — how often the rate is re-fetched while the page is open
-- `rateDecimals` — decimals shown in the headline rate
-- `locale` — number and date formatting, e.g. `'pt-BR'` or `'de-DE'`
-
-**Colors, in `eur-brl/styles.css`** — the custom properties at the top (`--bg`, `--text`, `--line`, `--up`, `--down`, `--radius`, …). Dark values are in `:root`; the light values used by `?theme=light` are in the block below it.
-
-### How it works
-
-- On load, the widget requests the latest rate and one year of history. Shorter periods are sliced from that history in memory, so switching periods or direction makes no further requests.
-- Each refresh requests only the latest rate. History is reloaded only when a new trading day appears.
-- The change percentage compares the two most recent observations returned by the API, so it is correct across weekends and holidays.
-- BRL → EUR is the inverse of the EUR → BRL rate.
-- If a request fails, the last successfully loaded rate stays on screen with a note; if nothing has loaded, the widget shows an empty state rather than a number.
+The technical and design conventions for widgets are in [`AGENTS.md`](AGENTS.md), which coding agents read before working in this repository.

@@ -6,6 +6,7 @@
   const CONFIG = {
     defaultFrom: 'EUR', // 'EUR' or 'BRL' — overridable with ?from=
     defaultPeriod: 30, // 7, 30, 90 or 365 — overridable with ?period=
+    showConverter: false, // overridable with ?converter=true|false
     refreshMinutes: 30,
     rateDecimals: 4,
     locale: 'en-GB',
@@ -377,6 +378,11 @@
 
   const theme = params.get('theme');
   if (theme === 'light') document.documentElement.dataset.theme = theme;
+
+  const paramConverter = params.get('converter');
+  const showConverter = paramConverter === null ? CONFIG.showConverter : ['true', '1'].includes(paramConverter);
+  $('converter').hidden = !showConverter;
+  el.card.classList.toggle('has-converter', showConverter);
 
   renderPeriods();
   bindEvents();
