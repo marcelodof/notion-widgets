@@ -33,8 +33,13 @@
   ];
 
   const BAR_ROW_PX = 20; // matches grid-template-rows of .bars
+  const BAR_LABEL_MAX_SHARE = 0.36; // of a column, before category names are truncated
   const BAR_MIN_COL_PX = 190;
   const BAR_MAX_COLS = 3;
+
+  const TICK_MIN_GAP_PX = 18; // vertical room one scale label needs
+  const TICK_FONT_PX = 10; // matches .chart-tick
+  const X_AXIS_PX = 12; // height reserved under the plot for the horizontal axis labels
 
   /* ---------- API ---------- */
 
@@ -112,6 +117,42 @@
     return [...items.slice(0, Math.max(0, capacity - 1)), other];
   }
 
+  // Round values inside [min, max] for the chart scale: the finest 1/2/2.5/5 step that gives at most maxTicks.
+  function axisTicks(min, max, maxTicks) {
+    if (!(max > min)) return [];
+    for (let pow = 10 ** (Math.floor(Math.log10(max - min)) - 2); ; pow *= 10) {
+      for (const mult of [1, 2, 2.5, 5]) {
+        const step = mult * pow;
+        const first = Math.ceil(min / step);
+        const last = Math.floor(max / step);
+        if (last - first + 1 <= maxTicks) {
+          return Array.from({ length: last - first + 1 }, (_, i) => (first + i) * step);
+        }
+      }
+    }
+  }
+
+  // Drops horizontal axis labels that would collide. Evenly spaced ticks keep every nth,
+  // counted from the first; uneven ones keep the rightmost of each colliding pair.
+  function thinTicks(ticks, xOf, widthOf, even) {
+    const gap = 6;
+    if (!ticks.length) return [];
+    if (even) {
+      const widest = Math.max(...ticks.map((t) => widthOf(t.label)));
+      const spacing = ticks.length > 1 ? xOf(ticks[1].slot) - xOf(ticks[0].slot) : Infinity;
+      const needed = Math.ceil((widest + gap) / spacing);
+      const stride = [1, 2, 3, 4, 6, 12].find((n) => n >= needed) ?? needed;
+      return ticks.filter((_, i) => i % stride === 0);
+    }
+    const kept = [];
+    for (const tick of [...ticks].reverse()) {
+      const next = kept.at(-1);
+      const room = next ? xOf(next.slot) - xOf(tick.slot) : Infinity;
+      if (room >= (widthOf(next?.label ?? '') + widthOf(tick.label)) / 2 + gap) kept.push(tick);
+    }
+    return kept;
+  }
+
   /* ---------- Formatting ---------- */
 
   const fmtNumber = (value) =>
@@ -120,6 +161,13 @@
   const fmtMoney = (value) => `${value < 0 ? '−' : ''}${CONFIG.currencySymbol}${fmtNumber(Math.abs(value))}`;
 
   const fmtSignedMoney = (value) => (value > 0 ? `+${fmtMoney(value)}` : fmtMoney(value));
+
+  // Short form for the chart scale: €500, €2k, €2,5k
+  function fmtCompact(value) {
+    const thousands = Math.abs(value) >= 1000;
+    const number = (thousands ? value / 1000 : value).toLocaleString(CONFIG.locale, { maximumFractionDigits: 1 });
+    return `${CONFIG.currencySymbol}${number}${thousands ? 'k' : ''}`;
+  }
 
   const fmtPct = (pct) => `${pct > 0 ? '+' : pct < 0 ? '−' : ''}${fmtNumber(Math.abs(pct))}%`;
 
@@ -194,12 +242,13 @@
   // What the line chart shows for the current view: the lines, the tabs above it and the idle readout.
   function chartModel() {
     const data = state.data;
-    if (!data) return { slots: 0, lines: [], tabs: [], idle: [], label: '' };
+    if (!data) return { slots: 0, lines: [], slotLabels: [], xTicks: [], tabs: [], idle: [], label: '' };
 
     if (state.view === 'spend') {
       const years = spendYears(data);
       const selected = years.some((y) => y.year === state.year) ? state.year : years.at(-1)?.year;
       const lines = years.map((y) => ({
+        name: y.year,
         active: y.year === selected,
         pts: y.points.map((p) => ({ ...p, label: `${data.months[p.slot]} ${y.year}` })),
       }));
@@ -207,6 +256,10 @@
       return {
         slots: data.months.length,
         lines,
+        slotLabels: data.months,
+        axis: true,
+        xTicks: data.months.map((label, slot) => ({ slot, label })),
+        evenTicks: true,
         tabs: years.map((y) => ({ key: y.year, label: y.year, text: `Highlight ${y.year}`, pressed: y.year === selected })),
         idle: active ? [span(fmtMoney(average(active.pts.map((p) => p.value)))), span(` avg in ${selected}`, 'note')] : [],
         label: active ? `Monthly spend in ${selected}, ${active.pts[0].label} to ${active.pts.at(-1).label}` : '',
@@ -220,14 +273,18 @@
       slot,
       value: p.value,
       label: fmtMonth(p.month),
+      year: p.month.slice(0, 4),
     }));
     const pct = pts.length >= 2 && pts[0].value !== 0 ? pctChange(pts[0].value, pts.at(-1).value) : null;
     const since = period.months === Infinity ? `since ${pts[0]?.label}` : `in ${period.text}`;
     return {
       slots: pts.length,
-      lines: [{ active: true, pts }],
+      lines: [{ name: 'Patrimony', active: true, pts }],
+      slotLabels: pts.map((p) => p.label),
+      // One label where each year starts, plus the year the range opens in.
+      xTicks: pts.filter((p, i) => i === 0 || p.year !== pts[i - 1].year).map((p) => ({ slot: p.slot, label: p.year })),
       tabs: PERIODS.map((p) => ({ key: p.key, label: p.label, text: p.text, pressed: p.key === state.period })),
-      idle: pct === null ? [] : [span(fmtPct(pct), trendClass(pct)), span(` ${since}`, 'note')],
+      idle: pct === null ? [] : [span(fmtPct(pct)), span(` ${since}`, 'note')],
       label: pts.length ? `Patrimony from ${pts[0].label} to ${pts.at(-1).label}` : '',
     };
   }
@@ -271,12 +328,15 @@
     readout: $('readout'),
     tabs: $('tabs'),
     svg: $('chart-svg'),
+    grid: $('chart-grid'),
+    xAxis: $('chart-xaxis'),
     area: $('chart-area'),
     dim: $('chart-dim'),
     line: $('chart-line'),
     cursor: $('chart-cursor'),
     lastDot: $('chart-last'),
-    hoverDot: $('chart-hover'),
+    dots: $('chart-dots'),
+    tip: $('chart-tip'),
     chartEmpty: $('chart-empty'),
     breakdown: $('breakdown'),
     bars: $('bars'),
@@ -291,8 +351,16 @@
     return node;
   }
 
+  function svgEl(name, attrs) {
+    const node = document.createElementNS('http://www.w3.org/2000/svg', name);
+    for (const [key, value] of Object.entries(attrs)) node.setAttribute(key, value);
+    return node;
+  }
+
   // Geometry of the drawn chart, kept for hit-testing on hover.
   let plot = null;
+
+  const measure = document.createElement('canvas').getContext('2d');
 
   function render() {
     const kind = view().kind;
@@ -350,49 +418,86 @@
 
     if (!drawable) {
       plot = null;
+      el.tip.hidden = true;
       el.readout.replaceChildren();
       return;
     }
 
-    const pad = { top: 8, right: 6, bottom: 8, left: 2 };
+    const pad = { top: 8, right: 6, bottom: 8 + (model.xTicks.length ? X_AXIS_PX : 0), left: 2 };
     const values = model.lines.flatMap((l) => l.pts.map((p) => p.value));
     const min = Math.min(...values);
     const max = Math.max(...values);
-    const innerW = width - pad.left - pad.right;
     const innerH = height - pad.top - pad.bottom;
-    const x = (p) => pad.left + (p.slot / (model.slots - 1)) * innerW;
-    const y = (p) => pad.top + (max === min ? 0.5 : 1 - (p.value - min) / (max - min)) * innerH;
-    const pathOf = (pts) => pts.map((p, i) => `${i ? 'L' : 'M'}${x(p).toFixed(1)} ${y(p).toFixed(1)}`).join('');
 
-    const xs = active.pts.map(x);
-    const ys = active.pts.map(y);
-    plot = { pts: active.pts, xs, ys, height, idle: model.idle };
+    const maxTicks = Math.max(2, Math.min(5, Math.floor(innerH / TICK_MIN_GAP_PX)));
+    const ticks = model.axis ? axisTicks(min, max, maxTicks) : [];
+    const tickLabels = ticks.map(fmtCompact);
+    // Room on the right for the scale labels (10px tabular digits are about 6px wide).
+    if (ticks.length) pad.right = Math.max(...tickLabels.map((l) => l.length)) * 6 + 10;
+
+    const innerW = width - pad.left - pad.right;
+    const x = (slot) => pad.left + (slot / (model.slots - 1)) * innerW;
+    const y = (value) => pad.top + (max === min ? 0.5 : 1 - (value - min) / (max - min)) * innerH;
+    const pathOf = (pts) =>
+      pts.map((p, i) => `${i ? 'L' : 'M'}${x(p.slot).toFixed(1)} ${y(p.value).toFixed(1)}`).join('');
+
+    // Hovering works per slot (a month), across every line that has a value there.
+    const slots = [...new Set(model.lines.flatMap((l) => l.pts.map((p) => p.slot)))].sort((a, b) => a - b);
+    plot = {
+      slots,
+      xs: slots.map(x),
+      lines: model.lines.map((l) => ({
+        name: l.name,
+        active: l.active,
+        bySlot: new Map(l.pts.map((p) => [p.slot, { ...p, y: y(p.value) }])),
+      })),
+      activeName: active.name,
+      lastActiveSlot: active.pts.at(-1).slot,
+      slotLabels: model.slotLabels,
+      right: pad.left + innerW,
+      bottom: height - pad.bottom + 8,
+      idle: model.idle,
+    };
 
     el.svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
     el.svg.setAttribute('aria-label', `${model.label}. Use arrow keys to inspect values.`);
 
-    const ns = 'http://www.w3.org/2000/svg';
+    el.grid.replaceChildren(
+      ...ticks.flatMap((tick, i) => {
+        const ty = y(tick).toFixed(1);
+        const text = svgEl('text', { class: 'chart-tick', x: width, y: ty });
+        text.textContent = tickLabels[i];
+        return [svgEl('line', { class: 'chart-grid', x1: pad.left, x2: pad.left + innerW, y1: ty, y2: ty }), text];
+      })
+    );
+
+    measure.font = `${TICK_FONT_PX}px ${getComputedStyle(el.svg).fontFamily}`;
+    el.xAxis.replaceChildren(
+      ...thinTicks(model.xTicks, x, (text) => measure.measureText(text).width, model.evenTicks).map((tick) => {
+        const text = svgEl('text', { class: 'chart-tick chart-tick-x', x: x(tick.slot).toFixed(1), y: height - 1 });
+        text.textContent = tick.label;
+        return text;
+      })
+    );
+
     el.dim.replaceChildren(
       ...model.lines
         .filter((l) => !l.active && l.pts.length >= 2)
-        .map((l) => {
-          const path = document.createElementNS(ns, 'path');
-          path.setAttribute('class', 'chart-line is-dim');
-          path.setAttribute('d', pathOf(l.pts));
-          return path;
-        })
+        .map((l) => svgEl('path', { class: 'chart-line is-dim', d: pathOf(l.pts) }))
     );
 
     const path = pathOf(active.pts);
+    const firstX = x(active.pts[0].slot);
+    const lastX = x(active.pts.at(-1).slot);
     el.line.setAttribute('d', path);
     // An area fill only reads well under a single line.
     const single = model.lines.length === 1;
     el.area.toggleAttribute('hidden', !single);
-    if (single) el.area.setAttribute('d', `${path}L${xs.at(-1).toFixed(1)} ${height}L${xs[0].toFixed(1)} ${height}Z`);
-    el.lastDot.setAttribute('cx', xs.at(-1));
-    el.lastDot.setAttribute('cy', ys.at(-1));
+    if (single) el.area.setAttribute('d', `${path}L${lastX.toFixed(1)} ${plot.bottom}L${firstX.toFixed(1)} ${plot.bottom}Z`);
+    el.lastDot.setAttribute('cx', lastX);
+    el.lastDot.setAttribute('cy', y(active.pts.at(-1).value));
 
-    if (state.hoverIndex !== null) state.hoverIndex = Math.min(state.hoverIndex, active.pts.length - 1);
+    if (state.hoverIndex !== null) state.hoverIndex = Math.min(state.hoverIndex, slots.length - 1);
     renderHover();
   }
 
@@ -400,22 +505,64 @@
     if (!plot) return;
     const i = state.hoverIndex;
     const hovering = i !== null;
+    const comparing = plot.lines.length > 1;
     // SVG elements have no `hidden` property, only the attribute.
     el.cursor.toggleAttribute('hidden', !hovering);
-    el.hoverDot.toggleAttribute('hidden', !hovering);
+    el.tip.hidden = !hovering || !comparing;
 
     if (!hovering) {
+      el.dots.replaceChildren();
       el.readout.replaceChildren(...plot.idle.map((node) => node.cloneNode(true)));
       return;
     }
 
-    el.cursor.setAttribute('x1', plot.xs[i]);
-    el.cursor.setAttribute('x2', plot.xs[i]);
+    const slot = plot.slots[i];
+    const px = plot.xs[i];
+    el.cursor.setAttribute('x1', px);
+    el.cursor.setAttribute('x2', px);
     el.cursor.setAttribute('y1', 0);
-    el.cursor.setAttribute('y2', plot.height);
-    el.hoverDot.setAttribute('cx', plot.xs[i]);
-    el.hoverDot.setAttribute('cy', plot.ys[i]);
-    el.readout.textContent = `${fmtMoney(plot.pts[i].value)} · ${plot.pts[i].label}`;
+    el.cursor.setAttribute('y2', plot.bottom);
+
+    // Active line last, so its dot is drawn on top.
+    el.dots.replaceChildren(
+      ...plot.lines
+        .filter((l) => l.bySlot.has(slot))
+        .sort((a, b) => a.active - b.active)
+        .map((l) =>
+          svgEl('circle', {
+            class: l.active ? 'chart-hover' : 'chart-hover is-dim',
+            r: l.active ? 3.5 : 2.5,
+            cx: px,
+            cy: l.bySlot.get(slot).y,
+          })
+        )
+    );
+
+    const point = plot.lines.find((l) => l.active).bySlot.get(slot);
+    el.readout.textContent = point
+      ? `${fmtMoney(point.value)} · ${point.label}`
+      : `${plot.slotLabels[slot]} · no data for ${plot.activeName}`;
+
+    if (comparing) renderTip(slot, px);
+  }
+
+  // Every line's value at the hovered slot, beside the cursor.
+  function renderTip(slot, px) {
+    el.tip.replaceChildren(
+      ...plot.lines.map((l) => {
+        const row = document.createElement('div');
+        const point = l.bySlot.get(slot);
+        row.className = l.active ? 'tip-row is-active' : 'tip-row';
+        row.append(span(l.name), span(point ? fmtMoney(point.value) : '—'));
+        return row;
+      })
+    );
+    const gap = 10;
+    const tipW = el.tip.offsetWidth;
+    // Flips to the left of the cursor rather than covering the scale.
+    const left = px + gap + tipW <= plot.right ? px + gap : px - gap - tipW;
+    el.tip.style.left = `${Math.max(0, left)}px`;
+    el.tip.style.top = `${(plot.bottom - el.tip.offsetHeight) / 2}px`;
   }
 
   function renderBars() {
@@ -436,9 +583,19 @@
     const max = Math.max(...shown.map((b) => b.value), 0);
     const labels = shown.map((b) => fmtMoney(b.value));
 
+    // Name and value columns are sized to their widest text, so the bars get the rest
+    // and all start and end at the same x.
+    const style = getComputedStyle(el.bars);
+    measure.font = `${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
+    const widest = (texts) => Math.ceil(Math.max(...texts.map((t) => measure.measureText(t).width), 0)) + 2;
+    const colWidth = (el.breakdown.clientWidth - (cols - 1) * parseFloat(style.columnGap || 0)) / cols;
+
     el.bars.style.setProperty('--rows', Math.min(rows, shown.length || 1));
-    // One shared width for the value column, so every bar starts and ends at the same x.
-    el.bars.style.setProperty('--value-ch', Math.max(...labels.map((l) => l.length), 1) + 0.5);
+    el.bars.style.setProperty(
+      '--label-w',
+      `${Math.min(widest(shown.map((b) => b.type)), Math.floor(colWidth * BAR_LABEL_MAX_SHARE))}px`
+    );
+    el.bars.style.setProperty('--value-w', `${widest(labels)}px`);
     el.bars.replaceChildren(
       ...shown.map((b, i) => {
         const li = document.createElement('li');
@@ -500,8 +657,8 @@
     el.svg.addEventListener('blur', () => setHover(null));
     el.svg.addEventListener('keydown', (e) => {
       if (!plot) return;
-      const lastIndex = plot.pts.length - 1;
-      const i = state.hoverIndex ?? lastIndex;
+      const lastIndex = plot.slots.length - 1;
+      const i = state.hoverIndex ?? plot.slots.indexOf(plot.lastActiveSlot);
       if (e.key === 'ArrowLeft') setHover(Math.max(0, i - 1));
       else if (e.key === 'ArrowRight') setHover(Math.min(lastIndex, i + 1));
       else if (e.key === 'Escape') setHover(null);
