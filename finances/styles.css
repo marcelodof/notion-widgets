@@ -282,9 +282,13 @@ body {
   width: 100%;
   height: 100%;
   overflow: visible;
-  border-radius: 4px;
   cursor: crosshair;
   touch-action: pan-y;
+}
+
+/* Focus is shown by the hover marker instead of a ring around the chart */
+.chart svg:focus-visible {
+  outline: 0;
 }
 
 .chart-line {

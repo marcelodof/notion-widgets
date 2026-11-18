@@ -654,6 +654,9 @@
     el.svg.addEventListener('pointermove', (e) => plot && setHover(indexAt(e.clientX)));
     el.svg.addEventListener('pointerdown', (e) => plot && setHover(indexAt(e.clientX)));
     el.svg.addEventListener('pointerleave', () => setHover(null));
+    el.svg.addEventListener('focus', () => {
+      if (plot && el.svg.matches(':focus-visible')) setHover(state.hoverIndex ?? plot.slots.indexOf(plot.lastActiveSlot));
+    });
     el.svg.addEventListener('blur', () => setHover(null));
     el.svg.addEventListener('keydown', (e) => {
       if (!plot) return;
