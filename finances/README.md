@@ -27,9 +27,9 @@ https://<username>.github.io/<repo>/finances/?view=spend&api=<web app URL>
 
 | `view` | Shows | Suggested height |
 | --- | --- | --- |
-| `spend` (default) | Average spend, plus one line per year of monthly spend | 190px wide, 330px narrow |
+| `spend` (default) | Average spend, plus one line per year of monthly spend, with months along the bottom and a scale on the right. Hovering a month compares every year, with the selected one emphasized. | 190px wide, 330px narrow |
 | `breakdown` | Average spend by category, as bars | 190px wide, 330px narrow |
-| `patrimony` | Total patrimony, average growth, and the patrimony line | 190px wide, 330px narrow |
+| `patrimony` | Total patrimony, average growth, and the patrimony line with years along the bottom | 190px wide, 330px narrow |
 | `average-spend` | Average spend, number only | 140px |
 | `total-patrimony` | Total patrimony and average growth, numbers only | 140px |
 | `patrimony-growth` | Average patrimony growth, number only | 140px |
@@ -43,7 +43,7 @@ Other parameters:
 | `period` | Range of the `patrimony` chart: `6`, `12`, `all` | `all` |
 | `theme` | `light` | dark (`#191919`, Notion's dark background) |
 
-When the embed is too short for a chart, the chart is hidden and the number remains. When the category bars don't all fit, the smallest categories are summed into one "Other" row.
+When the embed is too short for a chart, the chart is hidden and the number remains: below 165px for a wide block, or below 280px for a narrow column. When the category bars don't all fit, the smallest categories are summed into one "Other" row.
 
 ## Privacy
 

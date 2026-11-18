@@ -36,13 +36,16 @@
         </div>
         <div class="chart">
           <svg id="chart-svg" role="img" tabindex="0" aria-label="History chart">
+            <g id="chart-grid" aria-hidden="true"></g>
+            <g id="chart-xaxis" aria-hidden="true"></g>
             <path class="chart-area" id="chart-area"/>
             <g id="chart-dim"></g>
             <path class="chart-line" id="chart-line"/>
             <line class="chart-cursor" id="chart-cursor" hidden/>
             <circle class="chart-last" id="chart-last" r="3"/>
-            <circle class="chart-hover" id="chart-hover" r="3.5" hidden/>
+            <g id="chart-dots"></g>
           </svg>
+          <div class="chart-tip" id="chart-tip" aria-hidden="true" hidden></div>
           <p class="chart-empty" id="chart-empty" hidden>Not enough data</p>
         </div>
       </section>

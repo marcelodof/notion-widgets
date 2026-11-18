@@ -22,7 +22,7 @@ This repository is a collection of small static widgets embedded in a personal N
 ## Design rules
 
 - Dark by default: background `#191919`, Notion-like neutral colors, defined as CSS custom properties at the top of `styles.css`. `?theme=light` switches to the light tokens.
-- Minimal: system fonts, subtle 1px borders, soft rounded corners, no shadows or gradients. Color is reserved for meaning (e.g. green/red for change).
+- Minimal: system fonts, soft rounded corners, no border around the widget, no shadows or gradients. Color is reserved for meaning (e.g. green/red for change).
 - The widget fills its iframe. It must look right both as a wide, short block (about 640×190) and in a narrow column (about 300×330, down to 240 wide), without scrolling.
 - Semantic HTML, labelled buttons and inputs, visible focus states, and `prefers-reduced-motion` respected.
 
