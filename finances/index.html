@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <meta name="referrer" content="no-referrer">
+  <title>Finances</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="card" id="card" aria-busy="true">
+    <header class="head">
+      <h1 class="title" id="title"></h1>
+      <span class="head-note" id="head-note"></span>
+      <div class="actions">
+        <button type="button" class="icon-btn" id="refresh" aria-label="Refresh data" title="Refresh">
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M13 8a5 5 0 1 1-1.6-3.7M13 2.5v2.3h-2.3"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <div class="body">
+      <section class="quote" id="quote" aria-label="Summary">
+        <p class="figure">
+          <span class="figure-label" id="figure-label"></span>
+          <span class="figure-value" id="figure-value">—</span>
+        </p>
+        <p class="meta" id="meta"></p>
+      </section>
+
+      <section class="history" id="history" aria-label="History">
+        <div class="history-head">
+          <span class="readout" id="readout"></span>
+          <div class="tabs" id="tabs" role="group" aria-label="Chart range"></div>
+        </div>
+        <div class="chart">
+          <svg id="chart-svg" role="img" tabindex="0" aria-label="History chart">
+            <path class="chart-area" id="chart-area"/>
+            <g id="chart-dim"></g>
+            <path class="chart-line" id="chart-line"/>
+            <line class="chart-cursor" id="chart-cursor" hidden/>
+            <circle class="chart-last" id="chart-last" r="3"/>
+            <circle class="chart-hover" id="chart-hover" r="3.5" hidden/>
+          </svg>
+          <p class="chart-empty" id="chart-empty" hidden>Not enough data</p>
+        </div>
+      </section>
+
+      <section class="breakdown" id="breakdown" aria-label="Average spend by category" hidden>
+        <ul class="bars" id="bars"></ul>
+      </section>
+    </div>
+
+    <footer class="foot" id="status" role="status" aria-live="polite">Loading…</footer>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

@@ -9,6 +9,7 @@ Each widget lives in its own folder and is plain HTML, CSS and JavaScript — no
 | Widget | Folder | Description |
 | --- | --- | --- |
 | EUR / BRL exchange rate | [`eur-brl/`](eur-brl/) | Latest reference rate, daily change, converter and historical sparkline. |
+| Finances | [`finances/`](finances/) | Spend and patrimony charts read from a private Google Sheet through an Apps Script. |
 
 Each widget's own README covers its options and customization.
 
