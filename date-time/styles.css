@@ -1,0 +1,107 @@
+/* Theme tokens — edit these to restyle the widget. Dark is the default. */
+:root {
+  color-scheme: dark;
+  --bg: #191919;
+  --text: rgba(255, 255, 255, 0.86);
+  --muted: rgba(255, 255, 255, 0.52);
+  --faint: rgba(255, 255, 255, 0.34);
+  --radius: 10px;
+}
+
+/* ?theme=light */
+:root[data-theme="light"] {
+  color-scheme: light;
+  --bg: #ffffff;
+  --text: #37352f;
+  --muted: rgba(55, 53, 47, 0.6);
+  --faint: rgba(55, 53, 47, 0.4);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--text);
+  font: 14px/1.4 ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif,
+    "Apple Color Emoji", "Segoe UI Emoji";
+  -webkit-font-smoothing: antialiased;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 100%;
+  padding: 10px 16px;
+  border-radius: var(--radius);
+  background: var(--bg);
+  text-align: center;
+}
+
+/* Type scales with the embed, limited by whichever of width or height is tighter */
+
+.clock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(2px, 3vh, 10px);
+  max-width: 100%;
+}
+
+.time {
+  font-size: clamp(26px, min(14vw, 32vh), 64px);
+  font-weight: 500;
+  line-height: 1.1;
+  letter-spacing: 0.01em;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.has-seconds .time {
+  font-size: clamp(24px, min(12vw, 32vh), 64px);
+}
+
+.time .period {
+  margin-left: 0.25em;
+  font-size: 0.45em;
+  color: var(--muted);
+}
+
+.date {
+  font-size: clamp(12.5px, min(5.4vw, 13vh), 20px);
+  line-height: 1.3;
+  color: var(--muted);
+  text-wrap: balance;
+}
+
+.note {
+  margin: 0;
+  font-size: 11px;
+  color: var(--faint);
+}
