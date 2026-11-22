@@ -4,17 +4,36 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex">
-  <title>Date and time</title>
+  <title>Date, time and weather</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <main class="card">
-    <h1 class="visually-hidden">Current date and time</h1>
-    <time class="clock" id="clock">
-      <span class="time" id="time"></span>
-      <span class="date" id="date"></span>
-    </time>
-    <p class="note" id="note" role="status" hidden></p>
+  <main class="card" id="card">
+    <h1 class="visually-hidden">Current date, time and weather</h1>
+
+    <div class="clock-wrap">
+      <time class="clock" id="clock">
+        <span class="time" id="time"></span>
+        <span class="date" id="date"></span>
+      </time>
+      <p class="note" id="clock-note" role="status" hidden></p>
+    </div>
+
+    <section class="weather" id="weather" aria-label="Weather" aria-busy="true" hidden>
+      <div class="today" id="today" hidden>
+        <p class="place" id="place"></p>
+        <p class="now">
+          <span class="now-icon" id="now-icon" aria-hidden="true"></span>
+          <span class="now-temp" id="now-temp"></span>
+        </p>
+        <p class="now-text">
+          <span id="now-label"></span>
+          <span class="range" id="range"></span>
+        </p>
+      </div>
+      <ol class="days" id="days" aria-label="Next days" hidden></ol>
+      <p class="note" id="weather-note" role="status" aria-live="polite">Loading weather…</p>
+    </section>
   </main>
 
   <script src="app.js"></script>

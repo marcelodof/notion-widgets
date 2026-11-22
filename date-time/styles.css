@@ -56,7 +56,7 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: clamp(10px, 5vh, 20px);
   height: 100%;
   padding: 10px 16px;
   border-radius: var(--radius);
@@ -64,7 +64,24 @@ body {
   text-align: center;
 }
 
-/* Type scales with the embed, limited by whichever of width or height is tighter */
+p {
+  margin: 0;
+}
+
+.note {
+  font-size: 11px;
+  color: var(--faint);
+}
+
+/* Clock — type scales with the embed, limited by whichever of width or height is tighter */
+
+.clock-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+}
 
 .clock {
   display: flex;
@@ -100,8 +117,202 @@ body {
   text-wrap: balance;
 }
 
-.note {
-  margin: 0;
-  font-size: 11px;
+/* With weather below the clock, the clock takes a smaller share of the height */
+
+.has-weather .time {
+  font-size: clamp(26px, min(14vw, 13vh), 52px);
+}
+
+.has-weather.has-seconds .time {
+  font-size: clamp(24px, min(12vw, 13vh), 52px);
+}
+
+.has-weather .date {
+  font-size: clamp(12.5px, min(5.4vw, 5vh), 16px);
+}
+
+/* Weather */
+
+.weather {
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  max-width: 100%;
+  font-variant-numeric: tabular-nums;
+}
+
+.icon {
+  display: block;
+  flex: none;
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.icon * {
+  vector-effect: non-scaling-stroke;
+}
+
+/* Clouds are opaque so they cover the sun or moon behind them */
+.icon .cloud {
+  fill: var(--bg);
+}
+
+.icon .dots {
+  stroke-width: 2.4;
+}
+
+.today {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.place,
+.now-text {
+  font-size: 12.5px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.place {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.now {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.now-icon .icon {
+  width: 30px;
+  height: 30px;
+}
+
+.now-temp {
+  font-size: 28px;
+  font-weight: 500;
+  line-height: 1.25;
+}
+
+#now-label:not(:empty) + .range::before {
+  content: "·";
+  margin: 0 0.3em 0 0.05em;
   color: var(--faint);
+}
+
+.days {
+  display: flex;
+  gap: 22px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 12.5px;
+}
+
+.days li {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+}
+
+.day-name,
+.lo {
+  color: var(--muted);
+}
+
+.day-temps {
+  display: flex;
+  gap: 6px;
+}
+
+.weather .note.is-loading {
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  50% {
+    opacity: 0.35;
+  }
+}
+
+/* Wide: clock, today and the next days side by side */
+
+@media (min-width: 520px) {
+  .has-weather .card {
+    flex-direction: row;
+    gap: clamp(22px, 5.5vw, 48px);
+  }
+
+  .has-weather .time {
+    font-size: clamp(26px, min(8.5vw, 30vh), 54px);
+  }
+
+  .has-weather.has-seconds .time {
+    font-size: clamp(24px, min(7vw, 30vh), 54px);
+  }
+
+  .has-weather .date {
+    font-size: clamp(12.5px, min(2.5vw, 11vh), 16px);
+  }
+
+  .weather {
+    grid-template-columns: auto auto;
+    align-items: center;
+    gap: 8px clamp(20px, 4.5vw, 40px);
+  }
+
+  .weather .note {
+    grid-column: 1 / -1;
+  }
+
+  .days {
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .days li {
+    display: grid;
+    grid-template-columns: 2.4em 18px auto;
+    gap: 9px;
+    text-align: left;
+  }
+
+  .day-temps {
+    display: grid;
+    grid-template-columns: 2.1em 2.1em;
+    gap: 2px;
+    text-align: right;
+  }
+}
+
+/* Drop the next days, then the weather, when the embed is too short to fit them */
+
+@media (max-width: 519px) and (max-height: 249px) {
+  .days {
+    display: none !important;
+  }
+}
+
+@media (max-width: 519px) and (max-height: 169px), (min-width: 520px) and (max-height: 99px) {
+  .weather {
+    display: none !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+  }
 }
