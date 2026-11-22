@@ -1,4 +1,4 @@
-# Date, time and weather
+# Cockpit
 
 A clock showing the current time and full date, with the weather beside it: the place, the current temperature and conditions with an icon, today's high and low, and the next three days.
 
@@ -33,7 +33,7 @@ When the embed is too short, the widget drops parts rather than scrolling: in a 
 | `locale` | A language tag for weekday and month names, e.g. `pt-BR`, `de-DE` | `en-GB` |
 | `theme` | `light` | dark (`#191919`, Notion's dark background) |
 
-Example: `…/date-time/?place=Lisbon&tz=Europe/Lisbon`
+Example: `…/cockpit/?place=Lisbon&tz=Europe/Lisbon`
 
 `place` and `tz` are independent: `place` sets where the weather is for, `tz` sets which zone the clock shows. When several places share a name, the best-known one is used. If the place or zone is not recognised, the widget says so instead of guessing.
 

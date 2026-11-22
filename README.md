@@ -9,7 +9,7 @@ Each widget lives in its own folder and is plain HTML, CSS and JavaScript — no
 | Widget | Folder | Description |
 | --- | --- | --- |
 | EUR / BRL exchange rate | [`eur-brl/`](eur-brl/) | Latest reference rate, daily change, converter and historical sparkline. |
-| Date, time and weather | [`date-time/`](date-time/) | Clock and full date with the current weather and a three-day forecast for the viewer's location or a fixed place. |
+| Cockpit | [`cockpit/`](cockpit/) | Clock and full date with the current weather and a three-day forecast for the viewer's location or a fixed place. |
 | Finances | [`finances/`](finances/) | Spend and patrimony charts read from a private Google Sheet through an Apps Script. |
 
 Each widget's own README covers its options and customization.
